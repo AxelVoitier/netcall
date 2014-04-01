@@ -27,9 +27,9 @@ To create a simple service::
 
 To talk to this service::
 
-    from netcall import SyncRPCClient
+    from netcall.tornado import TornadoRPCClient
 
-    p = SyncRPCClient()
+    p = TornadoRPCClient()
     p.connect('tcp://127.0.0.1:5555')
     p.echo('Hi there')
     'Hi there'
@@ -46,11 +46,9 @@ To talk to this service::
 # Imports
 #-----------------------------------------------------------------------------
 
-from ..service import RPCServiceBase
-from ..client  import (
-    SyncRPCClient, RemoteMethod,
-    RPCError, RemoteRPCError, RPCTimeoutError
-)
+from ..base       import RPCServiceBase
+from ..utils      import RemoteMethod
+from ..errors     import RPCError, RemoteRPCError, RPCTimeoutError
 from ..serializer import *
 
 from .service import TornadoRPCService

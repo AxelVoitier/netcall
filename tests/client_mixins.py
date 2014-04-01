@@ -1,37 +1,12 @@
 # vim: fileencoding=utf-8 et ts=4 sts=4 sw=4 tw=0 fdm=marker fmr=#{,#}
 
-from os       import removedirs
-from tempfile import mkdtemp
-
-class BaseClientTest(object):
-
-    @classmethod
-    def setUpClass(cls):
-        cls.tmp_dir = mkdtemp(prefix='netcall-test-')
-        cls.urls    = [
-            'ipc://%s/test-%s' % (cls.tmp_dir, i)
-            for i in range(3)
-        ]
-        cls.extra   = ['ipc://%s/extra' % cls.tmp_dir]
-
-    @classmethod
-    def tearDownClass(cls):
-        removedirs(cls.tmp_dir)
-
-    def setUp(self):
-        # Setup of self.client by child classes
-        assert self.client
-
-    def tearDown(self):
-        self.client.socket.close(0)
-
+class ClientBindConnectMixIn(object):
 
     def test_initial_state(self):
         client = self.client
 
         self.assertTrue(not client.bound)
         self.assertTrue(not client.connected)
-
 
     def test_bind_one(self):
         client = self.client

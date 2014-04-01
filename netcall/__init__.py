@@ -11,9 +11,9 @@ Authors:
 Example
 -------
 
-To create a simple service::
+To create a simple service:
 
-    from netcall.tornado import TornadoRPCService
+    from netcall import ThreadingRPCService
 
     echo = TornadoRPCService()
 
@@ -25,11 +25,11 @@ To create a simple service::
     echo.start()
     echo.serve()
 
-To talk to this service::
+To talk to this service:
 
-    from netcall import SyncRPCClient
+    from netcall import ThreadingRPCClient
 
-    p = SyncRPCClient()
+    p = ThreadingRPCClient()
     p.connect('tcp://127.0.0.1:5555')
     p.echo('Hi there')
     'Hi there'
@@ -50,32 +50,12 @@ To talk to this service::
 # for tornado versions of the classes import netcall.tornado
 # for gevent versions of the classes import netcall.green
 
-from .service import RPCServiceBase
-from .client  import (
-    SyncRPCClient, RemoteMethod,
-    RPCError, RemoteRPCError, RPCTimeoutError
-)
-from .serializer import *
+from .base_client  import RPCClientBase
+from .base_service import RPCServiceBase
+from .utils        import logger, RemoteMethod, ThreadPool, get_zmq_classes, detect_green_env
+from .errors       import RPCError, RemoteRPCError, RPCTimeoutError
+from .serializer   import *
 
-from sys     import stderr
-from logging import getLogger, DEBUG
+from .sync         import SyncRPCClient
+from .threading    import ThreadingRPCService, ThreadingRPCClient
 
-logger = getLogger('netcall')
-
-
-def setup_logger(logger='netcall', level=DEBUG, stream=stderr):  #{
-    """ A utility function to setup a basic logging handler
-        for a given logger (netcall by default)
-    """
-    from logging import StreamHandler, Formatter
-
-    if isinstance(logger, basestring):
-        logger = getLogger(logger)
-
-    handler   = StreamHandler(stream)
-    formatter = Formatter("%(levelname)s:%(name)s:%(message)s")
-    handler.setLevel(level)
-    handler.setFormatter(formatter)
-    logger.setLevel(level)
-    logger.addHandler(handler)
-#}

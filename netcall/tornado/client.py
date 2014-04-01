@@ -20,23 +20,18 @@ Authors:
 # Imports
 #-----------------------------------------------------------------------------
 
-from logging import getLogger
-
-import zmq
-
 from zmq.eventloop.zmqstream import ZMQStream
 from zmq.eventloop.ioloop    import IOLoop, DelayedCallback
 
 from tornado.concurrent import Future
 
-from ..client import RPCClientBase, RemoteMethodBase, RPCTimeoutError
-
-
-logger = getLogger("netcall")
+from ..base   import RPCClientBase
+from ..utils  import RemoteMethodBase, get_zmq_classes
+from ..errors import RPCTimeoutError
 
 
 #-----------------------------------------------------------------------------
-# RPC Service Proxy
+# Tornado RPC Client
 #-----------------------------------------------------------------------------
 class TornadoRPCClient(RPCClientBase):  #{
     """An asynchronous service proxy (based on Tornado IOLoop)"""
@@ -55,10 +50,17 @@ class TornadoRPCClient(RPCClientBase):  #{
             An instance of a Serializer subclass that will be used to serialize
             and deserialize args, kwargs and the result.
         """
-        assert context is None or isinstance(context, zmq.Context)
-        self.context  = context if context is not None else zmq.Context.instance()
+        Context, _ = get_zmq_classes()
+
+        if context is None:
+            self.context = Context.instance()
+        else:
+            assert isinstance(context, Context)
+            self.context = context
+
         self.ioloop   = IOLoop.instance() if ioloop is None else ioloop
         self._futures = {}  # {<req_id> : <Future>}
+
         super(TornadoRPCClient, self).__init__(**kwargs)
     #}
     def _create_socket(self):  #{
@@ -67,7 +69,7 @@ class TornadoRPCClient(RPCClientBase):  #{
         self.socket.on_recv(self._handle_reply)
     #}
     def _handle_reply(self, msg_list):  #{
-        logger.debug('received: %r' % msg_list)
+        self.logger.debug('received: %r' % msg_list)
         reply = self._parse_reply(msg_list)
 
         if reply is None:
@@ -139,7 +141,7 @@ class TornadoRPCClient(RPCClientBase):  #{
             if future_tout:
                 future, _ = future_tout
                 tout_msg  = "Request %s timed out after %s sec" % (req_id, timeout)
-                logger.debug(tout_msg)
+                self.logger.debug(tout_msg)
                 future.set_exception(RPCTimeoutError(tout_msg))
 
         timeout = timeout or 0

@@ -20,8 +20,6 @@ Authors:
 # Imports
 #-----------------------------------------------------------------------------
 
-from logging   import getLogger
-
 import zmq
 
 from zmq.eventloop.zmqstream import ZMQStream
@@ -29,10 +27,7 @@ from zmq.eventloop.ioloop    import IOLoop
 
 from tornado.concurrent import Future
 
-from ..service import RPCServiceBase
-
-
-logger = getLogger("netcall")
+from ..base import RPCServiceBase
 
 #-----------------------------------------------------------------------------
 # RPC Service

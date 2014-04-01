@@ -6,10 +6,12 @@ Authors:
 
 * Brian Granger
 * Alexander Glyzov
+* Axel Voitier
 
 """
 #-----------------------------------------------------------------------------
-#  Copyright (C) 2012-2014. Brian Granger, Min Ragan-Kelley, Alexander Glyzov
+#  Copyright (C) 2012-2014. Brian Granger, Min Ragan-Kelley, Alexander Glyzov,
+#  Axel Voitier
 #
 #  Distributed under the terms of the BSD License.  The full license is in
 #  the file LICENSE distributed as part of this software.
@@ -23,17 +25,19 @@ from abc    import ABCMeta, abstractmethod
 from random import randint
 
 import zmq
-from zmq.eventloop.zmqstream import ZMQStream
 
 from .serializer import PickleSerializer
+from .utils      import logger
 
 
 #-----------------------------------------------------------------------------
-# RPC base class
+# RPC base
 #-----------------------------------------------------------------------------
 
-class RPCBase(object):
+class RPCBase(object):  #{
     __metaclass__ = ABCMeta
+
+    logger = logger
 
     def __init__(self, serializer=None, identity=None):  #{
         """Base class for RPC service and proxy.
@@ -65,12 +69,19 @@ class RPCBase(object):
 
     def reset(self):  #{
         """Reset the socket/stream."""
-        if isinstance(self.socket, (zmq.Socket, ZMQStream)):
+        if self.socket is not None:
             self.socket.close(linger=0)
         self._create_socket()
         self._ready    = False
         self.bound     = set()
         self.connected = set()
+    #}
+
+    def shutdown(self):  #{
+        """ Deallocate resources (cleanup)
+        """
+        self.logger.debug('closing the socket')
+        self.socket.close(0)
     #}
 
     def bind(self, urls, only=False):  #{
@@ -158,3 +169,4 @@ class RPCBase(object):
 
         return port
     #}
+#}

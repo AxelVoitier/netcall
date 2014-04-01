@@ -2,7 +2,7 @@
 # vim: fileencoding=utf-8 et ts=4 sts=4 sw=4 tw=0 fdm=marker fmr=#{,#}
 
 """ A simple RPC server that shows how to run multiple RPC services
-    asynchronously using Gevent cooperative multitasking
+    concurrently using the standard Python threading API
 """
 
 #-----------------------------------------------------------------------------
@@ -12,13 +12,14 @@
 #  the file LICENSE distributed as part of this software.
 #-----------------------------------------------------------------------------
 
-from gevent        import joinall, sleep as gevent_sleep
-from netcall.green import GreenRPCService, JSONSerializer
+from time import sleep
+
+from netcall import ThreadingRPCService, JSONSerializer
 
 
 # Custom serializer/deserializer can be set up upon initialization.
-# Obviously it must match on a client and server.
-echo = GreenRPCService(green_env='gevent', serializer=JSONSerializer())
+# Obviously it must match on both client and server.
+echo = ThreadingRPCService(serializer=JSONSerializer())
 
 
 @echo.task(name='echo')
@@ -29,7 +30,7 @@ def echo_echo(s):
 @echo.task(name='sleep')
 def echo_sleep(t):
     print "%r sleep %s" % (echo.bound, t)
-    gevent_sleep(t)
+    sleep(t)
     print "end of sleep"
     return t
 
@@ -38,11 +39,7 @@ def echo_error():
     raise ValueError('raising ValueError for fun!')
 
 
-class Math(GreenRPCService):
-
-    def __init__(self, **kwargs):
-        kwargs['green_env'] = 'gevent'
-        super(Math, self).__init__(**kwargs)
+class Math(ThreadingRPCService):
 
     def add(self, a, b):
         print "%r add %r %r" % (self.bound, a, b)
@@ -76,10 +73,9 @@ if __name__ == '__main__':
     math2.register(echo_error, name='error')
     math2.register(echo_sleep, name='sleep')
 
-    # now we spawn service greenlets and wait for them to exit
-    joinall([
-        echo.start(),
-        math1.start(),
-        math2.start()
-    ])
+    # now we spawn service threads and wait for them to exit
+    echo.start()
+    math1.start()
+    math2.start()
 
+    echo.serve()

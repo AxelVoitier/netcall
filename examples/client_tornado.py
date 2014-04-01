@@ -34,7 +34,11 @@ def spawn(coro, *args, **kwargs):
 def printer(client, name, *args, **kwargs):
     print '<request>', name, args, kwargs
     try:
-        res = yield client.call(name, *args, **kwargs)
+        future = client.call(name, *args, **kwargs)
+        if future is None:
+            res = None
+        else:
+            res = yield future
     except RemoteRPCError, e:
         print "Got a remote exception:"
         print e.ename

@@ -1,9 +1,8 @@
 """
-Gevent versions of RPC service and client
+RPC service and client classes using the standard Python threading API.
 
-Authors:
-
-* Brian Granger
+Authors
+-------
 * Alexander Glyzov
 
 Example
@@ -11,9 +10,9 @@ Example
 
 To create a simple service::
 
-    from netcall.green import GreenRPCService
+    from netcall import ThreadingRPCService
 
-    echo = GreenRPCService()
+    echo = ThreadingRPCService()
 
     @echo.task
     def echo(self, s):
@@ -26,9 +25,9 @@ To create a simple service::
 
 To talk to this service::
 
-    from netcall.green import GreenRPCClient
+    from netcall import ThreadingRPCClient
 
-    p = GreenRPCClient()
+    p = ThreadingRPCClient()
     p.connect('tcp://127.0.0.1:5555')
     p.echo('Hi there')
     'Hi there'
@@ -45,11 +44,12 @@ To talk to this service::
 # Imports
 #-----------------------------------------------------------------------------
 
+from ..base_client  import RPCClientBase
 from ..base_service import RPCServiceBase
-from ..utils        import RemoteMethod
+from ..utils        import logger, RemoteMethod
 from ..errors       import RPCError, RemoteRPCError, RPCTimeoutError
 from ..serializer   import *
 
-from .service import GreenRPCService
-from .client  import GreenRPCClient
+from .service import ThreadingRPCService, ThreadPool
+from .client  import ThreadingRPCClient
 

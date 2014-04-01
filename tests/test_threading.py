@@ -1,25 +1,24 @@
 # vim: fileencoding=utf-8 et ts=4 sts=4 sw=4 tw=0 fdm=marker fmr=#{,#}
 
-from netcall.utils     import get_zmq_classes
-from netcall.threading import ThreadPool, ThreadingRPCService
-from netcall.sync      import SyncRPCClient
+from netcall           import get_zmq_classes
+from netcall.threading import ThreadPool, ThreadingRPCClient, ThreadingRPCService
 
 from .base          import BaseCase
 from .client_mixins import ClientBindConnectMixIn
 from .rpc_mixins    import RPCCallsMixIn
 
 
-class SyncBase(BaseCase):
+class ThreadingBase(BaseCase):
 
     def setUp(self):
         Context, _ = get_zmq_classes()
 
         self.context = Context()
         self.pool    = ThreadPool(24)
-        self.client  = SyncRPCClient(context=self.context)
+        self.client  = ThreadingRPCClient(context=self.context, pool=self.pool)
         self.service = ThreadingRPCService(context=self.context, pool=self.pool)
 
-        super(SyncBase, self).setUp()
+        super(ThreadingBase, self).setUp()
 
     def tearDown(self):
         self.client.shutdown()
@@ -29,12 +28,12 @@ class SyncBase(BaseCase):
         self.pool.stop()
         self.pool.join()
 
-        super(SyncBase, self).tearDown()
+        super(ThreadingBase, self).tearDown()
 
 
-class SyncClientBindConnectTest(ClientBindConnectMixIn, SyncBase):
+class ThreadingClientBindConnectTest(ClientBindConnectMixIn, ThreadingBase):
     pass
 
-class SyncRPCCallsTest(RPCCallsMixIn, SyncBase):
+class ThreadingRPCCallsTest(RPCCallsMixIn, ThreadingBase):
     pass
 
